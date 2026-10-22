@@ -1,0 +1,27 @@
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Searching: query
+  Searching --> RouteReady: destination selected and route returned
+  Searching --> Idle: cancel / search failure
+  RouteReady --> Navigating: user starts
+  Navigating --> Relocalizing: uncertainty or disagreement
+  Relocalizing --> Navigating: stable estimate
+  Relocalizing --> Rerouting: persistent deviation confirmed
+  Rerouting --> Navigating: replacement route validated
+  Rerouting --> Relocalizing: route unavailable / position uncertain
+  Navigating --> Paused: pause / interruption
+  Paused --> Navigating: resume and refresh position
+  Navigating --> Arrived: sufficient arrival evidence
+  Navigating --> Cancelled: end
+  Paused --> Cancelled: end
+  Arrived --> [*]
+  Cancelled --> [*]
+  state "Landmark match lifecycle" as Match {
+    [*] --> Candidate
+    Candidate --> Verified: evidence checks pass
+    Candidate --> Expired: rejected / timeout
+    Verified --> Stable: dwell and hysteresis pass
+    Verified --> Candidate: conflicting evidence
+    Stable --> Expired: movement / TTL / route step change
+    Expired --> [*]
+  }

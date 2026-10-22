@@ -1,0 +1,47 @@
+flowchart TB
+  subgraph mobile["Mobile app"]
+    nav["App / navigation state"]
+    dest["Destination search"]
+    perm["Permission and consent"]
+    camera["Camera / frame sampler"]
+    loc["Location and heading"]
+    fusion["Domain fusion and route progress"]
+    tts["TTS and instruction UI"]
+    client["API client / offline cache"]
+    nav --> dest
+    nav --> perm
+    perm --> camera
+    perm --> loc
+    camera --> fusion
+    loc --> fusion
+    fusion --> tts
+    dest --> client
+    fusion --> client
+  end
+  subgraph api["API service"]
+    routes["Places and routes"]
+    sessions["Navigation sessions"]
+    localization["Localization orchestration"]
+    validate["Schema validation / auth / rate limits"]
+    providers["Map and vision adapters"]
+    telemetry["Telemetry / privacy-safe logs"]
+    validate --> routes
+    validate --> sessions
+    validate --> localization
+    routes --> providers
+    localization --> providers
+  end
+  subgraph vision["Vision service"]
+    candidates["Candidate retrieval"]
+    lookup["Reference lookup"]
+    embed["Embedding / OCR"]
+    match["Matching / spatial consistency"]
+    calibrate["Fusion / calibration / stability"]
+    instruction["Validated instruction output"]
+    candidates --> lookup --> embed --> match --> calibrate --> instruction
+  end
+  client --> validate
+  providers --> candidates
+  routes --> telemetry
+  sessions --> telemetry
+  localization --> telemetry

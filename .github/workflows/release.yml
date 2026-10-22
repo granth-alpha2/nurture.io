@@ -1,0 +1,22 @@
+name: Release readiness
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check release notes exist
+        shell: bash
+        run: |
+          test -f CHANGELOG.md
+          grep -q '^## Unreleased' CHANGELOG.md
+          echo "Release workflow is a readiness stub; publishing and deployments are not configured."

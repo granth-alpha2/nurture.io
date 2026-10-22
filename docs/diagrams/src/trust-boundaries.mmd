@@ -1,0 +1,31 @@
+flowchart LR
+  subgraph device["Trust boundary: user device"]
+    user["User"]
+    sensors["GPS / heading / camera<br/>untrusted evidence"]
+    app["Mobile app<br/>permissions, sampling, local UI"]
+    user --> app
+    sensors --> app
+  end
+  subgraph edge["Trust boundary: public API edge"]
+    ingress["TLS ingress / WAF"]
+    api["API validation<br/>auth / rate limits / request ID"]
+    ingress --> api
+  end
+  subgraph private["Trust boundary: private services and data"]
+    vision["Vision service<br/>schema-validated output"]
+    db[("Postgres")]
+    redis[("Redis TTL")]
+    api --> vision
+    api --> db
+    api --> redis
+    vision --> db
+  end
+  subgraph thirdparty["Trust boundary: external providers"]
+    maps[["Map API<br/>terms / attribution gate"]]
+    ai[["Vision provider<br/>data processing terms"]]
+  end
+  app -->|"consented minimum data / TLS"| ingress
+  api -->|"permitted requests"| maps
+  vision -->|"minimized evidence"| ai
+  api -. "redacted telemetry" .-> monitor["Monitoring boundary"]
+  vision -.-> monitor

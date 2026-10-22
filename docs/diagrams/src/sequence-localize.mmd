@@ -1,0 +1,18 @@
+sequenceDiagram
+  actor User
+  participant Mobile
+  participant API
+  participant Vision
+  participant Data as Route / permitted reference data
+  User->>Mobile: Grant camera consent and start
+  Mobile->>Mobile: Quality gate / deduplicate frame
+  Mobile->>API: Location, accuracy, heading, optional selected frame
+  API->>API: Validate schema, consent, limits
+  API->>Vision: Validated localization request
+  Vision->>Data: Retrieve eligible candidates
+  Data-->>Vision: Candidate metadata
+  Vision->>Vision: Match, consistency, calibration, stability
+  Vision-->>API: Estimate or abstention + evidence
+  API->>API: Validate output and fuse route/GPS
+  API-->>Mobile: Estimate or GPS fallback
+  Mobile-->>User: One instruction or safe relocalization prompt

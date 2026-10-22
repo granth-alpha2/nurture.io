@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a product or engineering improvement.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: checkboxes
+    id: impacts
+    attributes:
+      label: Considerations
+      options:
+        - label: I considered navigation safety, privacy, and accessibility impacts.
+          required: true

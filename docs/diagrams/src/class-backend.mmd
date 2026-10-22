@@ -1,0 +1,62 @@
+classDiagram
+  class User {
+    +UUID pseudonymousId
+    +String attestationStatus
+  }
+  class NavigationSession {
+    +UUID id
+    +String state
+    +DateTime startedAt
+    +DateTime endedAt
+  }
+  class Route {
+    +UUID id
+    +String provider
+    +Geometry path
+  }
+  class RouteStep {
+    +int sequence
+    +String maneuver
+    +String instruction
+  }
+  class Landmark {
+    +UUID id
+    +String sourceId
+    +Geometry location
+    +String license
+  }
+  class ReferenceImage {
+    +UUID id
+    +String source
+    +String license
+    +boolean consented
+  }
+  class LandmarkMatch {
+    +UUID id
+    +float score
+    +String modelVersion
+  }
+  class LocalizationEstimate {
+    +UUID id
+    +float accuracyMeters
+    +boolean requiresRelocalization
+  }
+  class Instruction {
+    +UUID id
+    +String text
+    +boolean evidenceValidated
+  }
+  class Feedback {
+    +UUID id
+    +String category
+    +DateTime createdAt
+  }
+  User "1" --> "0..*" NavigationSession
+  NavigationSession "1" --> "0..*" Route
+  Route "1" *-- "1..*" RouteStep
+  Landmark "1" --> "0..*" ReferenceImage
+  NavigationSession --> LandmarkMatch
+  NavigationSession --> LocalizationEstimate
+  LandmarkMatch --> Landmark
+  NavigationSession --> Instruction
+  NavigationSession --> Feedback

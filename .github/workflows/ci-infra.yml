@@ -1,0 +1,32 @@
+name: Infrastructure CI
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - '.github/workflows/ci-infra.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'infra/**'
+      - '.github/workflows/ci-infra.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report scaffold-only state
+        if: ${{ hashFiles('infra/terraform/**/*.tf') == '' }}
+        run: echo "Terraform files are not present; IaC checks begin in Phase 2."
+      - uses: hashicorp/setup-terraform@v3
+        if: ${{ hashFiles('infra/terraform/**/*.tf') != '' }}
+        with:
+          terraform_version: 1.9.8
+      - name: Check Terraform formatting
+        if: ${{ hashFiles('infra/terraform/**/*.tf') != '' }}
+        run: terraform fmt -check -recursive infra/terraform

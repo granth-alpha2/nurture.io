@@ -1,0 +1,50 @@
+flowchart TB
+  images[("Artifact Registry<br/>API / vision images")]
+  subgraph dev["Dev environment: Docker Compose"]
+    dev_ingress["Local ingress"]
+    dev_api["API container"]
+    dev_vision["Vision container"]
+    dev_db[("PostGIS / pgvector container")]
+    dev_redis[("Redis container")]
+    dev_ingress --> dev_api
+    dev_api --> dev_vision
+    dev_api --> dev_db
+    dev_api --> dev_redis
+  end
+  subgraph stage["Stage environment: Kubernetes namespace"]
+    stage_ingress["Managed TLS ingress"]
+    stage_api_service["API Service"]
+    stage_vision_service["Vision Service"]
+    stage_api["API pods"]
+    stage_vision["Vision pods"]
+    stage_db[("Managed PostgreSQL")]
+    stage_redis[("Managed Redis")]
+    stage_storage[("Object storage")]
+    stage_ingress --> stage_api_service --> stage_api
+    stage_api --> stage_vision_service --> stage_vision
+    stage_api --> stage_db
+    stage_api --> stage_redis
+    stage_vision --> stage_storage
+  end
+  subgraph prod["Prod environment: Kubernetes namespace"]
+    prod_ingress["WAF / managed TLS ingress"]
+    prod_api_service["API Service"]
+    prod_vision_service["Vision Service"]
+    prod_api["API pods"]
+    prod_vision["Vision pods"]
+    sql[("Managed Cloud SQL")]
+    redis[("Managed Redis")]
+    storage[("Permitted object storage")]
+    prod_ingress --> prod_api_service --> prod_api
+    prod_api --> prod_vision_service --> prod_vision
+    prod_api --> sql
+    prod_api --> redis
+    prod_vision --> storage
+  end
+  maps[["Google APIs"]]
+  prod_api --> maps
+  images -. "immutable images" .-> dev_api
+  images -.-> stage_api
+  images -.-> stage_vision
+  images -.-> prod_api
+  images -.-> prod_vision

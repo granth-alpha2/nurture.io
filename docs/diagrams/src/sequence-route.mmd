@@ -1,0 +1,16 @@
+sequenceDiagram
+  actor User
+  participant Mobile
+  participant API
+  participant Maps as Map Provider
+  User->>Mobile: Search destination
+  Mobile->>API: POST /v1/places/search
+  API->>Maps: Search (permitted fields)
+  Maps-->>API: Candidate results + attribution
+  API-->>Mobile: Validated candidates
+  User->>Mobile: Confirm destination
+  Mobile->>API: POST /v1/routes/walking
+  API->>Maps: Walking route request
+  Maps-->>API: Route geometry and steps
+  API-->>Mobile: Validated route
+  Mobile-->>User: Route summary and Start action

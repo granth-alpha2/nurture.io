@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant Sensors
+  participant Mobile
+  participant API
+  participant Maps as Map Provider
+  actor User
+  Sensors->>Mobile: Noisy location updates
+  Mobile->>Mobile: Accuracy, hysteresis, dwell check
+  Mobile->>API: Request localization / route progress
+  API-->>Mobile: Persistent deviation confirmed or uncertain
+  alt Persistent deviation with reliable position
+    Mobile->>API: POST /v1/routes/walking
+    API->>Maps: Request replacement pedestrian route
+    Maps-->>API: New route or error
+    API-->>Mobile: Validated route
+    Mobile-->>User: Announce reroute or explicit failure
+  else Uncertain position
+    Mobile-->>User: GPS guidance and safe relocalization prompt
+  end

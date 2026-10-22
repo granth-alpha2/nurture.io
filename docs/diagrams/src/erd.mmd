@@ -1,0 +1,80 @@
+erDiagram
+  USER ||--o{ NAVIGATION_SESSION : owns
+  NAVIGATION_SESSION ||--o{ ROUTE : has
+  ROUTE ||--|{ ROUTE_STEP : contains
+  LANDMARK ||--o{ REFERENCE_IMAGE : sourced_from
+  REFERENCE_IMAGE ||--o{ EMBEDDING : represented_by
+  NAVIGATION_SESSION ||--o{ LOCALIZATION_ESTIMATE : yields
+  NAVIGATION_SESSION ||--o{ LANDMARK_MATCH : evaluates
+  LANDMARK ||--o{ LANDMARK_MATCH : candidate_for
+  NAVIGATION_SESSION ||--o{ INSTRUCTION : emits
+  ROUTE_STEP ||--o{ INSTRUCTION : guides
+  NAVIGATION_SESSION ||--o{ FEEDBACK : receives
+  USER {
+    uuid id PK
+    string pseudonymous_id
+  }
+  NAVIGATION_SESSION {
+    uuid id PK
+    uuid user_id FK
+    string state
+    datetime started_at
+    datetime ended_at
+  }
+  ROUTE {
+    uuid id PK
+    uuid session_id FK
+    string provider
+    geometry path
+  }
+  ROUTE_STEP {
+    uuid id PK
+    uuid route_id FK
+    int sequence
+    string maneuver
+    string instruction
+  }
+  LANDMARK {
+    uuid id PK
+    string source_id
+    geometry location
+    string license
+  }
+  REFERENCE_IMAGE {
+    uuid id PK
+    uuid landmark_id FK
+    string source
+    string license
+    boolean consented
+  }
+  EMBEDDING {
+    uuid id PK
+    uuid reference_image_id FK
+    string model_version
+    vector embedding
+  }
+  LOCALIZATION_ESTIMATE {
+    uuid id PK
+    uuid session_id FK
+    float accuracy_m
+    boolean requires_relocalization
+  }
+  LANDMARK_MATCH {
+    uuid id PK
+    uuid session_id FK
+    uuid landmark_id FK
+    float score
+    string model_version
+  }
+  INSTRUCTION {
+    uuid id PK
+    uuid session_id FK
+    uuid route_step_id FK
+    string text
+    boolean evidence_validated
+  }
+  FEEDBACK {
+    uuid id PK
+    uuid session_id FK
+    string category
+  }

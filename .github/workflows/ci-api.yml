@@ -1,0 +1,44 @@
+name: API CI
+
+on:
+  pull_request:
+    paths:
+      - 'apps/api/**'
+      - 'packages/**'
+      - '.github/workflows/ci-api.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/api/**'
+      - 'packages/**'
+      - '.github/workflows/ci-api.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report scaffold-only state
+        if: ${{ hashFiles('apps/api/package.json') == '' }}
+        run: echo "API project manifest is not present; API checks begin in Phase 1."
+      - uses: actions/setup-node@v4
+        if: ${{ hashFiles('apps/api/package.json') != '' }}
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/api/package-lock.json
+      - name: Install dependencies
+        if: ${{ hashFiles('apps/api/package.json') != '' }}
+        working-directory: apps/api
+        run: npm ci
+      - name: Lint, typecheck, and test
+        if: ${{ hashFiles('apps/api/package.json') != '' }}
+        working-directory: apps/api
+        run: |
+          npm run lint --if-present
+          npm run typecheck --if-present
+          npm test --if-present

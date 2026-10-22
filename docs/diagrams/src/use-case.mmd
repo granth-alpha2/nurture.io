@@ -1,0 +1,49 @@
+flowchart LR
+  user[/"Navigating User (non-technical)"/]
+  tourist[/"Tourist"/]
+  elderly[/"Elderly User"/]
+  admin[/"Admin / Operator"/]
+  maps[["Google Maps Platform (external)"]]
+  vision[["Vision / AI Provider (external)"]]
+  subgraph app["LandmarkNav"]
+    search([Search destination: text / voice])
+    confirm([Confirm destination])
+    start([Start navigation])
+    spoken([Receive spoken instruction])
+    repeat([Repeat instruction])
+    recognize([Recognise landmark])
+    relocalize([Relocalise])
+    reroute([Handle wrong turn / reroute])
+    pause([Pause / End navigation])
+    arrival([Confirm arrival])
+    language([Change language])
+    permissions([Grant / revoke permissions])
+    feedback([Report bad instruction])
+  end
+  user --- search
+  user --- confirm
+  user --- start
+  user --- spoken
+  user --- repeat
+  user --- relocalize
+  user --- reroute
+  user --- pause
+  user --- arrival
+  user --- language
+  user --- permissions
+  user --- feedback
+  tourist --- search
+  tourist --- start
+  elderly --- spoken
+  elderly --- repeat
+  admin --- feedback
+  admin --- pause
+  maps --- search
+  maps --- start
+  vision --- recognize
+  search -. "<<include>>" .-> confirm
+  start -. "<<include>>" .-> spoken
+  repeat -. "<<extend>>" .-> spoken
+  recognize -. "<<extend>>" .-> spoken
+  relocalize -. "<<extend>>" .-> recognize
+  reroute -. "<<extend>>" .-> start

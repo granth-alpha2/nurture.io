@@ -1,0 +1,21 @@
+flowchart LR
+  mobile["Mobile App<br/>React Native / Expo<br/>camera, GPS, heading, TTS, offline"]
+  api["API<br/>Fastify / TypeScript<br/>validation, orchestration, rate limits"]
+  vision["Vision Service<br/>FastAPI / Python<br/>provider adapters, matching, abstention"]
+  postgres[("PostgreSQL<br/>PostGIS / permitted pgvector")]
+  redis[("Redis<br/>TTL cache / idempotency / limits")]
+  object[("Object Storage<br/>permitted derived data only")]
+  maps[["Map Provider APIs"]]
+  ai[["Vision Provider"]]
+  monitor["Telemetry<br/>OTel / Prometheus / logs"]
+  mobile -->|"HTTPS /v1"| api
+  api -->|"validated localization request"| vision
+  api --> postgres
+  api --> redis
+  vision --> postgres
+  vision --> object
+  api --> maps
+  vision --> ai
+  mobile -. "diagnostics without raw frames" .-> monitor
+  api -.-> monitor
+  vision -.-> monitor

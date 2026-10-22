@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant Mobile
+  participant API
+  participant Route as Route State
+  actor User
+  Mobile->>API: Current location + accuracy
+  API->>Route: Check progress, destination and entrance context
+  Route-->>API: Proximity and route completion evidence
+  API-->>Mobile: Candidate arrival state
+  alt Proximity only or entrance ambiguous
+    Mobile-->>User: Near destination, confirm entrance safely
+    User->>Mobile: Confirm or continue
+  else Sufficient route evidence
+    Mobile-->>User: Arrival confirmation
+  end

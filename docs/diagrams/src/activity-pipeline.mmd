@@ -1,0 +1,23 @@
+flowchart TD
+  start([Frame / compact features])
+  retrieve["1. Candidate retrieval"]
+  filter["2. Heading cone / route corridor filter"]
+  reference["3. License-checked reference lookup"]
+  quality["4. Frame quality gate"]
+  embedding["5. Query-frame embedding"]
+  ocr["6. OCR / sign text"]
+  matching["7. Visual and text matching"]
+  spatial["8. Spatial consistency check"]
+  fusion["9. GPS + heading + route + visual fusion"]
+  calibrate["10. Confidence calibration"]
+  stable["11. Hysteresis / stabilization"]
+  instruction["12. Generate constrained instruction"]
+  valid{"Schema and evidence valid?"}
+  enough{"Confidence and consistency sufficient?"}
+  fallback["Abstain; GPS-only guidance / relocalize"]
+  done([Validated estimate])
+  start --> retrieve --> filter --> reference --> quality --> embedding --> ocr --> matching --> spatial --> fusion --> calibrate --> enough
+  enough -- No --> fallback
+  enough -- Yes --> stable --> instruction --> valid
+  valid -- No --> fallback
+  valid -- Yes --> done

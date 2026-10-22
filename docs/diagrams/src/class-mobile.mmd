@@ -1,0 +1,42 @@
+classDiagram
+  class NavigationSession {
+    +UUID id
+    +SessionState state
+    +pause()
+    +resume()
+    +end()
+  }
+  class Route {
+    +String id
+    +RouteStep[] steps
+    +int activeStep
+  }
+  class RouteStep {
+    +int sequence
+    +Maneuver maneuver
+    +String instruction
+    +float distanceMeters
+  }
+  class LocalizationEstimate {
+    +Coordinate location
+    +float accuracyMeters
+    +float headingDegrees
+    +boolean requiresRelocalization
+  }
+  class LandmarkMatch {
+    +String candidateId
+    +float score
+    +Evidence[] evidence
+    +MatchState state
+  }
+  class Instruction {
+    +String text
+    +String language
+    +boolean audioOnly
+  }
+  NavigationSession "1" --> "1" Route
+  Route "1" *-- "1..*" RouteStep
+  NavigationSession --> LocalizationEstimate
+  LocalizationEstimate --> LandmarkMatch
+  NavigationSession --> Instruction
+  RouteStep --> Instruction

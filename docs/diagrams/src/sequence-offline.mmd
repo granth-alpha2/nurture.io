@@ -1,0 +1,15 @@
+sequenceDiagram
+  participant Mobile
+  participant API
+  participant Cache as Permitted local route cache
+  actor User
+  Mobile->>API: Request route / update
+  API--x Mobile: Network or provider unavailable
+  Mobile->>Cache: Check unexpired permitted route
+  alt Route cache valid
+    Cache-->>Mobile: Cached route and last step
+    Mobile-->>User: Clearly announce GPS-only offline mode
+  else No valid route
+    Cache-->>Mobile: No usable route
+    Mobile-->>User: Explain limitation, do not invent directions
+  end

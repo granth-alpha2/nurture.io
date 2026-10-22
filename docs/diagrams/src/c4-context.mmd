@@ -1,0 +1,14 @@
+flowchart LR
+  person["Navigating User<br/>Tourist / older adult / visitor"]
+  system["LandmarkNav<br/>Mobile walking guidance"]
+  maps[("Google Maps Platform<br/>Places / walking routes")]
+  vision[("Vision / AI Provider<br/>Optional visual localization")]
+  operator["Admin / Operator<br/>Health and incident response"]
+  person -->|"destination, consent, sensor evidence"| system
+  system -->|"spoken and on-screen guidance"| person
+  system -->|"permitted place / route requests"| maps
+  maps -->|"place / route response"| system
+  system -->|"consented compact features or selected frame"| vision
+  vision -->|"validated estimate or abstention"| system
+  operator -->|"configuration / incident actions"| system
+  system -->|"aggregate operational metrics"| operator

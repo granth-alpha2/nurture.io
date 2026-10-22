@@ -1,0 +1,42 @@
+name: Security scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: read
+
+jobs:
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        if: ${{ (matrix.language == 'javascript-typescript' && hashFiles('apps/api/src/**/*.ts', 'apps/mobile/src/**/*.ts') != '') || (matrix.language == 'python' && hashFiles('apps/vision/**/*.py') != '') }}
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Analyze
+        if: ${{ (matrix.language == 'javascript-typescript' && hashFiles('apps/api/src/**/*.ts', 'apps/mobile/src/**/*.ts') != '') || (matrix.language == 'python' && hashFiles('apps/vision/**/*.py') != '') }}
+        uses: github/codeql-action/analyze@v3
+      - name: Report no application source
+        if: ${{ (matrix.language == 'javascript-typescript' && hashFiles('apps/api/src/**/*.ts', 'apps/mobile/src/**/*.ts') == '') || (matrix.language == 'python' && hashFiles('apps/vision/**/*.py') == '') }}
+        run: echo "No application source is present in Phase 0; CodeQL will analyze it when implementation begins."
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
