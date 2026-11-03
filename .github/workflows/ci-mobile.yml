@@ -23,7 +23,7 @@ jobs:
       - name: Report scaffold-only state
         if: ${{ hashFiles('apps/mobile/package.json') == '' }}
         run: echo "Mobile project manifest is not present; mobile checks begin in Phase 1."
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: ${{ hashFiles('apps/mobile/package.json') != '' }}
         with:
           node-version: 22
