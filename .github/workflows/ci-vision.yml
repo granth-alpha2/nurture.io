@@ -23,7 +23,7 @@ jobs:
       - name: Report scaffold-only state
         if: ${{ hashFiles('apps/vision/requirements.txt') == '' }}
         run: echo "Vision service dependencies are not present; service checks begin in a later phase."
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: ${{ hashFiles('apps/vision/requirements.txt') != '' }}
         with:
           python-version: '3.12'
