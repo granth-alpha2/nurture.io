@@ -1,0 +1,137 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: 'Target environment for deployment'
+        required: true
+        type: choice
+        default: 'dev'
+        options:
+          - dev
+          - stage
+          - prod
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.target_env == 'dev')
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      # Short-lived workload identity federation (OIDC) authentication
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID || 'landmarknav-dev' }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER || 'projects/123456789/locations/global/workloadIdentityPools/github-pool/providers/github-provider' }}
+          service_account: ${{ vars.GCP_DEPLOY_SA || 'gh-actions-deployer@landmarknav-dev.iam.gserviceaccount.com' }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: dev-landmarknav-gke
+          location: asia-south1
+
+      - name: Run Database Migrations Job
+        run: |
+          kubectl apply -k infra/k8s/overlays/dev
+          kubectl wait --for=condition=complete --timeout=180s job/landmarknav-db-migrate -n landmarks-dev || kubectl describe job/landmarknav-db-migrate -n landmarks-dev
+
+      - name: Verify Rollout Status
+        run: |
+          kubectl rollout status deployment/landmarknav-api -n landmarks-dev --timeout=120s
+          kubectl rollout status deployment/landmarknav-vision -n landmarks-dev --timeout=120s
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "Deployment failed, initiating automated rollback..."
+          kubectl rollout undo deployment/landmarknav-api -n landmarks-dev
+          kubectl rollout undo deployment/landmarknav-vision -n landmarks-dev
+
+  deploy-stage:
+    name: Deploy to Staging
+    needs: [deploy-dev]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target_env == 'stage'
+    runs-on: ubuntu-latest
+    environment: stage # Protected environment with required reviewer in GitHub
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID || 'landmarknav-stage' }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER || 'projects/123456789/locations/global/workloadIdentityPools/github-pool/providers/github-provider' }}
+          service_account: ${{ vars.GCP_DEPLOY_SA || 'gh-actions-deployer@landmarknav-stage.iam.gserviceaccount.com' }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: stage-landmarknav-gke
+          location: asia-south1
+
+      - name: Run Database Migrations Job
+        run: |
+          kubectl apply -k infra/k8s/overlays/stage
+          kubectl wait --for=condition=complete --timeout=180s job/landmarknav-db-migrate -n landmarks-stage || kubectl describe job/landmarknav-db-migrate -n landmarks-stage
+
+      - name: Verify Rollout Status
+        run: |
+          kubectl rollout status deployment/landmarknav-api -n landmarks-stage --timeout=180s
+          kubectl rollout status deployment/landmarknav-vision -n landmarks-stage --timeout=180s
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "Stage deployment failed, initiating automated rollback..."
+          kubectl rollout undo deployment/landmarknav-api -n landmarks-stage
+          kubectl rollout undo deployment/landmarknav-vision -n landmarks-stage
+
+  deploy-prod:
+    name: Deploy to Production
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.target_env == 'prod'
+    runs-on: ubuntu-latest
+    environment: prod # Protected environment with manual approvals and freeze windows
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID || 'landmarknav-prod' }}
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER || 'projects/123456789/locations/global/workloadIdentityPools/github-pool/providers/github-provider' }}
+          service_account: ${{ vars.GCP_DEPLOY_SA || 'gh-actions-deployer@landmarknav-prod.iam.gserviceaccount.com' }}
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: prod-landmarknav-gke
+          location: asia-south1
+
+      - name: Run Database Migrations Job
+        run: |
+          kubectl apply -k infra/k8s/overlays/prod
+          kubectl wait --for=condition=complete --timeout=300s job/landmarknav-db-migrate -n landmarks || kubectl describe job/landmarknav-db-migrate -n landmarks
+
+      - name: Verify Rollout Status
+        run: |
+          kubectl rollout status deployment/landmarknav-api -n landmarks --timeout=300s
+          kubectl rollout status deployment/landmarknav-vision -n landmarks --timeout=300s
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "Production deployment failed, initiating emergency rollback..."
+          kubectl rollout undo deployment/landmarknav-api -n landmarks
+          kubectl rollout undo deployment/landmarknav-vision -n landmarks

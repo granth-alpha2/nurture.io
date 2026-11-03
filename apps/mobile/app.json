@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "LandmarkNav",
+    "slug": "landmarknav",
+    "scheme": "landmarknav",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "The camera preview is optional and is not processed in Phase 1.",
+        "NSLocationWhenInUseUsageDescription": "Location is used for GPS-only demo route guidance while you navigate."
+      }
+    },
+    "android": {
+      "package": "io.nurture.landmarknav",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "RECORD_AUDIO"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "The optional camera preview is not processed or uploaded in Phase 1.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Location is used for GPS-only route guidance while navigating."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "Microphone access is used only when you choose voice destination entry.",
+          "speechRecognitionPermission": "Speech recognition converts your spoken destination to text."
+        }
+      ]
+    ]
+  }
+}

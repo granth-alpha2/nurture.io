@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landmarknav-ingress
+  labels:
+    app.kubernetes.io/name: landmarknav-ingress
+    app.kubernetes.io/part-of: landmarknav
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/managed-certificates: "landmarknav-managed-cert"
+    networking.gke.io/v1beta1.FrontendConfig: "landmarknav-frontend-config"
+spec:
+  rules:
+    - host: api.landmarknav.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: landmarknav-api
+                port:
+                  number: 3000

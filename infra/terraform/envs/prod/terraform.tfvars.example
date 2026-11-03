@@ -1,0 +1,10 @@
+project_id  = "landmarknav-prod-123456"
+region      = "asia-south1"
+environment = "prod"
+alert_email = "ops-prod@landmarknav.internal"
+authorized_ipv4_cidr_blocks = [
+  {
+    cidr_block   = "203.0.113.10/32"
+    display_name = "ci-runner-nat"
+  }
+]

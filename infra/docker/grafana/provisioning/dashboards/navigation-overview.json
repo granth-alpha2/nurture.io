@@ -1,0 +1,134 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 1,
+      "title": "Navigation SLO & Health Overview",
+      "type": "row"
+    },
+    {
+      "id": 2,
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "type": "stat",
+      "title": "API Availability SLO",
+      "targets": [
+        {
+          "expr": "1 - (sum(rate(landmarknav_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(landmarknav_http_requests_total[5m])))",
+          "legendFormat": "Availability"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.99 },
+              { "color": "green", "value": 0.995 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "type": "stat",
+      "title": "p95 Localize Latency (Target < 200ms)",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(landmarknav_http_request_duration_seconds_bucket{route=\"/v1/localize\"}[5m])) by (le)) * 1000",
+          "legendFormat": "p95 ms"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 200 },
+              { "color": "red", "value": 500 }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "type": "stat",
+      "title": "Active Navigation Sessions",
+      "targets": [
+        {
+          "expr": "landmarknav_active_sessions_total or vector(0)",
+          "legendFormat": "Active"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 5,
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "type": "stat",
+      "title": "Reroute Rate (Off-Route Trigger)",
+      "targets": [
+        {
+          "expr": "sum(rate(landmarknav_reroute_events_total[5m])) or vector(0)",
+          "legendFormat": "Reroutes/s"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ops" } }
+    },
+    {
+      "id": 6,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "type": "timeseries",
+      "title": "HTTP Request Throughput by Status",
+      "targets": [
+        {
+          "expr": "sum(rate(landmarknav_http_requests_total[1m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "type": "timeseries",
+      "title": "API Request Latency Quantiles",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(landmarknav_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(landmarknav_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(landmarknav_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["landmarknav", "navigation", "phase2"],
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "LandmarkNav Navigation Platform Overview",
+  "uid": "landmarknav-nav-overview",
+  "version": 1
+}
+

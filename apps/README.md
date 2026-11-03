@@ -1,3 +1,7 @@
 # Application workspaces
 
-Phase 0 scaffold only. The mobile, API, and vision services are intentionally not implemented yet; do not add production behavior until Phase 1 or later is approved in `docs/PROGRESS.md`.
+- `api/` contains the Phase 1 local Fastify API and PostgreSQL persistence.
+- `mobile/` contains the Phase 1 Expo GPS-only navigation demo.
+- `vision/` contains a health-checked Phase 1 shell; localization is disabled.
+
+All destination and route fixtures are simulated and unsuitable for real-world navigation. See each workspace README and `docs/PROGRESS.md` for current limits and validation status.

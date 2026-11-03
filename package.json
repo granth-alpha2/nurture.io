@@ -2,16 +2,31 @@
   "name": "landmarknav",
   "version": "0.1.0",
   "private": true,
-  "description": "Phase 0 documentation and diagram tooling for LandmarkNav",
+  "description": "LandmarkNav local GPS navigation demo and project tooling",
+  "workspaces": [
+    "apps/api",
+    "apps/mobile"
+  ],
   "scripts": {
     "diagrams": "node scripts/diagrams.mjs",
-    "validate:yaml": "node scripts/validate-yaml.mjs"
+    "validate:yaml": "node scripts/validate-yaml.mjs",
+    "bootstrap": "npm ci && node scripts/bootstrap-env.mjs",
+    "up": "docker compose --env-file .env -f infra/docker/docker-compose.yml up --build -d",
+    "down": "docker compose --env-file .env -f infra/docker/docker-compose.yml down",
+    "run-all": "run-all.bat",
+    "verify": "npm run validate:yaml && npm run verify --workspace=@landmarknav/api && npm run verify --workspace=@landmarknav/mobile && node scripts/audit-check.mjs"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "12.0.0",
     "yaml": "2.9.1"
   },
   "overrides": {
-    "katex": "0.18.10"
+    "katex": "0.18.10",
+    "zod": "4.6.7"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~58.0.16",
+    "react-dom": "19.3.1",
+    "react-native-web": "^0.21.4"
   }
 }

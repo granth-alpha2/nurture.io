@@ -28,15 +28,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: apps/mobile/package-lock.json
+          cache-dependency-path: package-lock.json
       - name: Install dependencies
         if: ${{ hashFiles('apps/mobile/package.json') != '' }}
-        working-directory: apps/mobile
-        run: npm ci
+        run: npm ci --workspace=@landmarknav/mobile --include-workspace-root=false
       - name: Lint, typecheck, and test
         if: ${{ hashFiles('apps/mobile/package.json') != '' }}
-        working-directory: apps/mobile
-        run: |
-          npm run lint --if-present
-          npm run typecheck --if-present
-          npm test --if-present
+        run: npm run verify --workspace=@landmarknav/mobile

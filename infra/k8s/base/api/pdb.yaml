@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: landmarknav-api
+  labels:
+    app.kubernetes.io/name: landmarknav-api
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: landmarknav
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: landmarknav-api

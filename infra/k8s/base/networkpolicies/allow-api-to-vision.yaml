@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-vision
+  labels:
+    app.kubernetes.io/part-of: landmarknav
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: landmarknav-vision
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: landmarknav-api
+      ports:
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-egress-to-vision
+  labels:
+    app.kubernetes.io/part-of: landmarknav
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: landmarknav-api
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: landmarknav-vision
+      ports:
+        - protocol: TCP
+          port: 8000

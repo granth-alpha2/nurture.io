@@ -34,9 +34,31 @@ jobs:
       - name: Report no application source
         if: ${{ (matrix.language == 'javascript-typescript' && hashFiles('apps/api/src/**/*.ts', 'apps/mobile/src/**/*.ts') == '') || (matrix.language == 'python' && hashFiles('apps/vision/**/*.py') == '') }}
         run: echo "No application source is present in Phase 0; CodeQL will analyze it when implementation begins."
+
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/dependency-review-action@v4
+
+  secret-and-vulnerability-scan:
+    name: Secret & Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Trivy secret & vulnerability scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'vuln,secret'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'

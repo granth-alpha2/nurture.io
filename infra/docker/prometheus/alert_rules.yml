@@ -1,0 +1,53 @@
+groups:
+  - name: landmarknav-navigation-alerts
+    rules:
+      - alert: APIHighLatency
+        expr: histogram_quantile(0.95, sum(rate(landmarknav_http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          tier: api
+        annotations:
+          summary: "API p95 latency exceeds 500ms"
+          description: "API p95 latency is currently {{ $value }}s, breaching the 500ms pedestrian navigation SLO."
+
+      - alert: APIServerErrorRate
+        expr: sum(rate(landmarknav_http_requests_total{status=~"5.."}[5m])) / sum(rate(landmarknav_http_requests_total[5m])) > 0.01
+        for: 2m
+        labels:
+          severity: critical
+          tier: api
+        annotations:
+          summary: "API 5xx server error rate exceeds 1%"
+          description: "API 5xx rate is {{ $value | humanizePercentage }} over the past 5 minutes."
+
+      - alert: APIServiceDown
+        expr: up{job="landmarknav-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          tier: api
+        annotations:
+          summary: "LandmarkNav API is down"
+          description: "API container instance is unreachable."
+
+      - alert: DatabaseUnavailable
+        expr: landmarknav_database_pool_total{status="connected"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          tier: database
+        annotations:
+          summary: "PostgreSQL Database connection lost"
+          description: "Active database pool connection count dropped to 0."
+
+      - alert: VisionServiceUnavailable
+        expr: up{job="landmarknav-vision"} == 0
+        for: 2m
+        labels:
+          severity: warning
+          tier: vision
+        annotations:
+          summary: "Vision service instance is unreachable"
+          description: "FastAPI vision service health check failed."
+

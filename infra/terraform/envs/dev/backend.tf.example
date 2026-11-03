@@ -1,0 +1,8 @@
+# Example remote backend configuration for dev
+# Replace with actual state bucket created in bootstrap step
+terraform {
+  backend "gcs" {
+    bucket = "landmarknav-dev-tfstate"
+    prefix = "terraform/state"
+  }
+}

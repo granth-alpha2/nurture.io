@@ -1,0 +1,61 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: landmarks-stage
+
+resources:
+  - ../../base
+
+patches:
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: landmarknav-api
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: api
+                env:
+                  - name: NODE_ENV
+                    value: staging
+                  - name: LOG_LEVEL
+                    value: info
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: landmarknav-vision
+      spec:
+        replicas: 2
+        template:
+          spec:
+            containers:
+              - name: vision
+                env:
+                  - name: ENVIRONMENT
+                    value: staging
+                  - name: LOG_LEVEL
+                    value: info
+  - patch: |-
+      apiVersion: external-secrets.io/v1beta1
+      kind: SecretStore
+      metadata:
+        name: gcp-secret-store
+      spec:
+        provider:
+          gcpsm:
+            projectID: landmarknav-stage
+            auth:
+              workloadIdentity:
+                clusterLocation: asia-south1
+                clusterName: stage-landmarknav-gke
+images:
+  - name: asia-south1-docker.pkg.dev/landmarknav/landmarknav/api
+    newName: asia-south1-docker.pkg.dev/landmarknav-stage/landmarknav-stage/api
+    newTag: stage-latest
+  - name: asia-south1-docker.pkg.dev/landmarknav/landmarknav/vision
+    newName: asia-south1-docker.pkg.dev/landmarknav-stage/landmarknav-stage/vision
+    newTag: stage-latest

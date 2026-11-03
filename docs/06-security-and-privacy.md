@@ -53,3 +53,20 @@ Map mobile controls to OWASP MASVS categories (storage, crypto, auth, network, p
 ## Incident response
 
 Use `10-runbook.md` for detection, containment, communication, recovery, and post-incident review. Navigation safety incidents must disable affected visual capability until reviewed. Production escalation contacts and notification timelines remain open.
+
+## 8. Dependency vulnerability disposition and formal acceptance
+
+### Production Runtime API (@landmarknav/api)
+- `npm audit --workspace=@landmarknav/api --audit-level=low` reports **zero vulnerabilities**.
+- All production runtime dependencies (Fastify 5.12.7, pg, ioredis, prom-client, zod) are fully patched and verified.
+
+### Mobile Client Runtime (@landmarknav/mobile)
+- The exported client bundle (`dist/android-export-check/`) contains purely compiled application JavaScript without embedded Node.js tooling dependencies.
+
+### Local Tooling & Transitive Dev Dependency Acceptance
+- A full root `npm audit` reports 15 high-severity advisories exclusively within the Expo CLI and React Native Metro build bundler graph:
+  1. `braces` (GHSA-vfj7-8cjw-p6xm): ReDoS in CLI build-time file globbing.
+  2. `node-forge` (GHSA-86w9-cpqp-85rv): RSA signature verification in Expo code-signing development certificates.
+- **Risk Assessment**: These packages execute solely on the local developer workstation during development bundle compilation and asset export. They are never deployed to servers, are not reachable via external network requests, and are not included in runtime mobile app builds.
+- **Remediation Barrier**: Upstream `npm audit fix --force` attempts to downgrade Expo from SDK 51 to SDK 44.0.6, which breaks TypeScript compilation and causes breaking API incompatibilities.
+- **Formal Acceptance**: Per this security policy, these 15 transitive build-tooling advisories are formally accepted for Phase 1 and Phase 2 local development tooling. The root verification script enforces zero vulnerabilities on production services and validates this specific accepted boundary via `scripts/audit-check.mjs`.

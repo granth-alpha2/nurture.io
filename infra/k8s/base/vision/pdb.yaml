@@ -1,0 +1,13 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: landmarknav-vision
+  labels:
+    app.kubernetes.io/name: landmarknav-vision
+    app.kubernetes.io/component: vision-service
+    app.kubernetes.io/part-of: landmarknav
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: landmarknav-vision

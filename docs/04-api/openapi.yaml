@@ -3,13 +3,14 @@ info:
   title: LandmarkNav API
   version: 0.1.0
   description: |
-    Planned API contract. External provider integrations and visual localization
-    are not implemented. Visual outputs must be validated and may abstain.
+    Phase 1 local development API. Authentication is not implemented; keep all
+    ports loopback-bound and never expose this demo service publicly. Places and
+    walking routes are SYNTHETIC straight-line fixtures marked SIMULATED. They
+    are not safe for real-world navigation. Visual localization is disabled.
 servers:
-  - url: https://api.example.invalid
-    description: Placeholder; no production service exists
-security:
-  - bearerAuth: []
+  - url: http://127.0.0.1:3000
+    description: Local Compose API only; unauthenticated and not for public exposure
+security: []
 paths:
   /v1/places/search:
     post:
@@ -26,7 +27,7 @@ paths:
               $ref: '#/components/schemas/PlaceSearchRequest'
       responses:
         '200':
-          description: Candidate results. Provider data retention is governed by verified terms.
+          description: SIMULATED destination candidates; not live provider data.
           content:
             application/json:
               schema:
@@ -35,12 +36,10 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/Problem'
-        '502':
-          $ref: '#/components/responses/Problem'
   /v1/routes/walking:
     post:
       operationId: createWalkingRoute
-      summary: Create a pedestrian route between confirmed endpoints
+      summary: Create a SIMULATED straight-line route between confirmed endpoints
       parameters:
         - $ref: '#/components/parameters/RequestId'
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -52,16 +51,41 @@ paths:
               $ref: '#/components/schemas/WalkingRouteRequest'
       responses:
         '200':
-          description: Walking route
+          description: SIMULATED straight-line route; not a real pedestrian route.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Route'
         '400':
           $ref: '#/components/responses/Problem'
-        '422':
+        '409':
           $ref: '#/components/responses/Problem'
-        '502':
+        '429':
+          $ref: '#/components/responses/Problem'
+  /v1/routes/{routeId}:
+    get:
+      operationId: getWalkingRoute
+      summary: Retrieve a current SIMULATED route
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: routeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '400':
+          $ref: '#/components/responses/Problem'
+        '200':
+          description: Route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '429':
           $ref: '#/components/responses/Problem'
   /v1/sessions:
     post:
@@ -84,6 +108,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/Session'
         '400':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '422':
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/Problem'
@@ -114,7 +142,9 @@ paths:
                 $ref: '#/components/schemas/Session'
         '404':
           $ref: '#/components/responses/Problem'
-        '409':
+        '400':
+          $ref: '#/components/responses/Problem'
+        '429':
           $ref: '#/components/responses/Problem'
     delete:
       operationId: endSession
@@ -132,14 +162,17 @@ paths:
           description: Session ended
         '404':
           $ref: '#/components/responses/Problem'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
   /v1/localize:
     post:
       operationId: localize
-      summary: Produce a validated localization estimate or abstain
-      description: Requires explicit opt-in for visual evidence. No frame persistence by default.
+      summary: Produce a GPS-only localization estimate or request relocalization
+      description: Phase 1 accepts GPS and route evidence only. Visual frames are not accepted or processed.
       parameters:
         - $ref: '#/components/parameters/RequestId'
-        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -158,6 +191,10 @@ paths:
         '429':
           $ref: '#/components/responses/Problem'
         '503':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '422':
           $ref: '#/components/responses/Problem'
   /v1/feedback:
     post:
@@ -179,6 +216,10 @@ paths:
           $ref: '#/components/responses/Problem'
         '429':
           $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+        '409':
+          $ref: '#/components/responses/Problem'
   /healthz:
     get:
       operationId: health
@@ -187,6 +228,8 @@ paths:
       responses:
         '200':
           description: Process is alive
+        '429':
+          $ref: '#/components/responses/Problem'
   /readyz:
     get:
       operationId: readiness
@@ -196,20 +239,19 @@ paths:
         '200':
           description: Ready to serve
         '503':
-          description: Not ready
+          $ref: '#/components/responses/Problem'
+        '429':
+          $ref: '#/components/responses/Problem'
   /metrics:
     get:
       operationId: metrics
-      summary: Prometheus metrics; restricted to internal monitoring
+      summary: Prometheus metrics; keep the service bound to loopback in local development
       responses:
         '200':
-          description: Metrics payload
+          description: Prometheus exposition format. Keep this endpoint local-only.
+        '429':
+          $ref: '#/components/responses/Problem'
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
   parameters:
     RequestId:
       name: X-Request-Id
@@ -241,7 +283,6 @@ components:
         title: { type: string }
         status: { type: integer, minimum: 400, maximum: 599 }
         detail: { type: string }
-        instance: { type: string, format: uri-reference }
         requestId: { type: string }
     Coordinate:
       type: object
@@ -267,8 +308,9 @@ components:
         attribution: { type: string }
     PlaceSearchResponse:
       type: object
-      required: [results]
+      required: [mode, results]
       properties:
+        mode: { type: string, enum: [SIMULATED] }
         results:
           type: array
           maxItems: 20
@@ -282,70 +324,72 @@ components:
         language: { type: string, default: en }
     Route:
       type: object
-      required: [routeId, distanceMeters, durationSeconds, steps]
+      required: [routeId, mode, distanceMeters, durationSeconds, path, steps, warning]
       properties:
-        routeId: { type: string }
+        routeId: { type: string, format: uuid }
+        mode: { type: string, enum: [SIMULATED] }
         distanceMeters: { type: number, minimum: 0 }
         durationSeconds: { type: integer, minimum: 0 }
-        encodedPolyline: { type: string }
+        path:
+          type: array
+          minItems: 2
+          items: { $ref: '#/components/schemas/Coordinate' }
         steps:
           type: array
           items: { $ref: '#/components/schemas/RouteStep' }
-        attribution: { type: string }
+        warning: { type: string }
     RouteStep:
       type: object
-      required: [sequence, instruction, maneuver, distanceMeters]
+      required: [sequence, instruction, maneuver, distanceMeters, crossing]
       properties:
         sequence: { type: integer, minimum: 0 }
         instruction: { type: string, maxLength: 240 }
         maneuver: { type: string }
         distanceMeters: { type: number, minimum: 0 }
-        crossing: { type: boolean, default: false }
+        crossing: { type: boolean, const: false }
     CreateSessionRequest:
       type: object
       required: [routeId]
       properties:
-        routeId: { type: string }
+        routeId: { type: string, format: uuid }
         visualConsent: { type: boolean, default: false }
     Session:
       type: object
-      required: [sessionId, state]
+      required: [sessionId, routeId, state]
       properties:
         sessionId: { type: string, format: uuid }
+        routeId: { type: string, format: uuid }
         state:
           type: string
-          enum: [active, paused, ended]
+          enum: [active, paused]
     SessionUpdate:
       type: object
       required: [state]
       properties:
         state: { type: string, enum: [active, paused] }
+        routeId: { type: string, format: uuid, description: Optional validated replacement route for rerouting }
     LocalizationRequest:
       type: object
       required: [sessionId, location, horizontalAccuracyMeters, capturedAt]
       properties:
         sessionId: { type: string, format: uuid }
         location: { $ref: '#/components/schemas/Coordinate' }
-        horizontalAccuracyMeters: { type: number, minimum: 0 }
+        horizontalAccuracyMeters: { type: number, minimum: 0, maximum: 100000 }
         headingDegrees: { type: number, minimum: 0, maximum: 360 }
         routeStepSequence: { type: integer, minimum: 0 }
         visualConsent: { type: boolean, default: false }
-        frameBase64:
-          type: string
-          contentEncoding: base64
-          description: Optional single selected downscaled frame; transient processing only.
         capturedAt: { type: string, format: date-time }
     Evidence:
       type: object
       required: [type, validated]
       properties:
-        type: { type: string, enum: [gps, heading, route, visual, ocr] }
+        type: { type: string, enum: [gps, route] }
         validated: { type: boolean }
         source: { type: string }
     LocalizationEstimate:
       type: object
       required:
-        [landmark_name, match_confidence, location_confirmed, requires_relocalization, evidence, model_version]
+        [landmark_name, match_confidence, location_confirmed, distance_to_landmark_meters, next_instruction, next_maneuver, distance_to_next_maneuver_meters, requires_relocalization, evidence, model_version, mode]
       properties:
         landmark_name: { type: [string, 'null'] }
         match_confidence: { type: number, minimum: 0, maximum: 1, description: 'Ranking score, not probability' }
@@ -359,6 +403,7 @@ components:
           type: array
           items: { $ref: '#/components/schemas/Evidence' }
         model_version: { type: string }
+        mode: { type: string, enum: [GPS_ONLY] }
     FeedbackRequest:
       type: object
       required: [sessionId, category]

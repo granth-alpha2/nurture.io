@@ -1,0 +1,4 @@
+project_id  = "landmarknav-dev-123456"
+region      = "asia-south1"
+environment = "dev"
+alert_email = "ops-dev@landmarknav.internal"

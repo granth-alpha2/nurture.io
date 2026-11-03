@@ -17,16 +17,67 @@ permissions:
 
 jobs:
   terraform:
+    name: Terraform Format & Validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Report scaffold-only state
-        if: ${{ hashFiles('infra/terraform/**/*.tf') == '' }}
-        run: echo "Terraform files are not present; IaC checks begin in Phase 2."
+
       - uses: hashicorp/setup-terraform@v3
-        if: ${{ hashFiles('infra/terraform/**/*.tf') != '' }}
         with:
           terraform_version: 1.9.8
+
       - name: Check Terraform formatting
-        if: ${{ hashFiles('infra/terraform/**/*.tf') != '' }}
         run: terraform fmt -check -recursive infra/terraform
+
+      - name: Validate dev environment
+        run: |
+          terraform -chdir=infra/terraform/envs/dev init -backend=false
+          terraform -chdir=infra/terraform/envs/dev validate
+
+      - name: Validate stage environment
+        run: |
+          terraform -chdir=infra/terraform/envs/stage init -backend=false
+          terraform -chdir=infra/terraform/envs/stage validate
+
+      - name: Validate prod environment
+        run: |
+          terraform -chdir=infra/terraform/envs/prod init -backend=false
+          terraform -chdir=infra/terraform/envs/prod validate
+
+  kubernetes:
+    name: Kubernetes Kustomize Build & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.30.0'
+
+      - name: Validate K8s base
+        run: kubectl kustomize infra/k8s/base > /dev/null
+
+      - name: Validate K8s dev overlay
+        run: kubectl kustomize infra/k8s/overlays/dev > /dev/null
+
+      - name: Validate K8s stage overlay
+        run: kubectl kustomize infra/k8s/overlays/stage > /dev/null
+
+      - name: Validate K8s prod overlay
+        run: kubectl kustomize infra/k8s/overlays/prod > /dev/null
+
+  iac-security:
+    name: IaC Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner on IaC
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'infra/'
+          format: 'table'
+          exit-code: '0'
+          severity: 'CRITICAL,HIGH'

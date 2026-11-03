@@ -1,0 +1,7 @@
+# Example remote backend configuration for stage
+terraform {
+  backend "gcs" {
+    bucket = "landmarknav-stage-tfstate"
+    prefix = "terraform/state"
+  }
+}

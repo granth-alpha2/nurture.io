@@ -1,0 +1,7 @@
+# Example remote backend configuration for prod
+terraform {
+  backend "gcs" {
+    bucket = "landmarknav-prod-tfstate"
+    prefix = "terraform/state"
+  }
+}

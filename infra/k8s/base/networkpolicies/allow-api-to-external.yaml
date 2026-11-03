@@ -1,0 +1,26 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-api-to-database-and-redis
+  labels:
+    app.kubernetes.io/part-of: landmarknav
+spec:
+  podSelector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values: ["landmarknav-api", "landmarknav-db-migrate"]
+  policyTypes:
+    - Egress
+  egress:
+    # Allow egress to Cloud SQL Postgres (port 5432) and Redis (port 6379)
+    - to:
+        - ipBlock:
+            cidr: 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 443
