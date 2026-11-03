@@ -25,7 +25,7 @@ jobs:
       - name: Report scaffold-only state
         if: ${{ hashFiles('apps/api/package.json') == '' }}
         run: echo "API project manifest is not present; API checks begin in Phase 1."
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: ${{ hashFiles('apps/api/package.json') != '' }}
         with:
           node-version: 22
